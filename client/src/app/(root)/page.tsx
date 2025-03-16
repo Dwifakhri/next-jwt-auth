@@ -1,12 +1,22 @@
 "use client";
+// import api from "@/utils/axiosInstance";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/authContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const fetchProtected = async () => {
+    try {
+      const res = await fetch("/api/protected");
+      const data = await res.json();
+      alert(data.message);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const logOut = async () => {
     try {
       setLoading(true);
@@ -25,6 +35,12 @@ export default function Home() {
       <div>
         <code>{JSON.stringify(user, null, 2)}</code>
       </div>
+      <button
+        onClick={fetchProtected}
+        disabled={loading}
+        className="block mx-auto mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
+        Fetch
+      </button>
       <button
         onClick={logOut}
         disabled={loading}
