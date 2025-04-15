@@ -18,8 +18,9 @@ This project uses the following technologies:
 
 ## Project Setup
 
-```sh
-bun install
+```bash
+# copy .env.example to .env file and set API URL for database
+$ cp .env.example .env
 ```
 
 ### Compile and Hot-Reload for Development (client)
