@@ -9,6 +9,7 @@ This project uses the following technologies:
 - **Next**: For building the user interface.
 - **TypeScript**: For type-safe JavaScript development.
 - **Tailwind CSS**: For styling and utility-first CSS framework.
+- **Axios**: For handling request interceptor.
 - **Express**: For backend integration.
 
 ## Pre-requisite
