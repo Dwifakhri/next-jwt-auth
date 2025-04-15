@@ -5,9 +5,9 @@ export async function GET(request: Request) {
   const queryParams = new URLSearchParams(url.searchParams).toString();
 
   try {
-    const token = (await cookies()).get("token")?.value;
+    const token = (await cookies()).get("access_token")?.value;
 
-    const apiUrl = `http://localhost:8000${url.pathname}${
+    const apiUrl = `${process.env.NEXT_PUBLIC_BE_API_URL}${url.pathname}${
       queryParams ? `?${queryParams}` : ""
     }`;
 
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
     const datax = await data.json();
     return new Response(JSON.stringify(datax), {
-      status: 200,
+      status: datax.status,
       headers: { "Content-Type": "application/json" }
     });
   } catch (error: unknown) {
