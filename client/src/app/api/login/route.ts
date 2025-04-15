@@ -3,11 +3,14 @@ import { cookies } from "next/headers";
 export async function POST(req: Request) {
   try {
     const requestBody = await req.json();
-    const response: any = await fetch(`http://localhost:8000/api/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody)
-    });
+    const response: any = await fetch(
+      `${process.env.NEXT_PUBLIC_BE_API_URL}/api/login`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody)
+      }
+    );
 
     const data = await response.json();
     if (!response.ok) {
@@ -16,18 +19,33 @@ export async function POST(req: Request) {
         statusText: data.message
       });
     }
-    const responseUser: any = await fetch(`http://localhost:8000/api/me`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${data.token}`
+    const responseUser: any = await fetch(
+      `${process.env.NEXT_PUBLIC_BE_API_URL}/api/me`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.access_token}`
+        }
       }
-    });
-    (await cookies()).set("token", data.token, {
+    );
+    const dataUser = await responseUser.json();
+    if (!responseUser.ok) {
+      return new Response(JSON.stringify(dataUser), {
+        status: responseUser.status,
+        statusText: dataUser.message
+      });
+    }
+    (await cookies()).set("access_token", data.access_token, {
       secure: true,
-      httpOnly: true
+      httpOnly: true,
+      maxAge: Number(process.env.NEXT_PUBLIC_ACCESS_TOKEN_EXP) * 60
     });
-    const user = await responseUser.json();
-    return new Response(JSON.stringify(user), {
+    (await cookies()).set("refresh_token", data.refresh_token, {
+      secure: true,
+      httpOnly: true,
+      maxAge: Number(process.env.NEXT_PUBLIC_REFRESH_TOKEN_EXP) * 60
+    });
+    return new Response(JSON.stringify(dataUser), {
       status: 200,
       headers: { "Content-Type": "application/json" }
     });

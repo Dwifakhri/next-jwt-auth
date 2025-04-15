@@ -34,8 +34,32 @@ app.post("/api/login", (req, res) => {
     return res.status(400).json({ message: "Invalid credentials" });
   }
 
-  const token = jwt.sign({ id: foundUser.id }, "shhhhh");
-  return res.json({ token });
+  const access_token = jwt.sign({ id: foundUser.id }, "shhhhh", {
+    expiresIn: "5m"
+  });
+  const refresh_token = jwt.sign({ id: foundUser.id }, "shhhhh", {
+    expiresIn: "1h"
+  });
+  return res.json({ access_token, refresh_token });
+});
+
+app.post("/api/refresh", (req, res) => {
+  const { refresh_token } = req.body;
+
+  try {
+    const payload = jwt.verify(refresh_token, "shhhhh");
+    const foundUser = users.find((user) => user.id === payload.id);
+    if (!foundUser) {
+      return res.status(401).json({ message: "Unauthorized" });
+    } else {
+      const access_token = jwt.sign({ id: foundUser.id }, "shhhhh", {
+        expiresIn: "5m"
+      });
+      return res.json({ access_token });
+    }
+  } catch (error) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 });
 
 const verifyJWT = (req, res, next) => {
@@ -66,7 +90,7 @@ app.get("/api/me", (req, res) => {
     if (me) {
       return res.json({ ...me, password: undefined });
     } else {
-      return res.status(500).json({ message: "Not found" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
   } catch (error) {
     return res.status(401).json({ message: "Unauthorized" });
