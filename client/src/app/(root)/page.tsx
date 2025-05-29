@@ -1,15 +1,20 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { user } = useAuth();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
   const fetchProtected = async () => {
     try {
       const res = await fetch("/api/protected");
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
       const data = await res.json();
       alert(data.message);
     } catch (error) {
@@ -20,7 +25,7 @@ export default function Home() {
     try {
       setLoading(true);
       await fetch("/api/logout", { method: "POST" });
-      router.push("/login");
+      window.location.href = "/login";
     } catch (error) {
       setLoading(false);
       console.log(error);

@@ -1,48 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { refreshToken, checkUser } from "./functions/token";
 
-const protectedRoutes = ["/", , "/protected"];
+const protectedRoutes = ["/", "/protected"];
 
 export default async function middleware(req: NextRequest) {
-  const path = req.nextUrl.pathname;
-  const isProtectedRoute = protectedRoutes.includes(path);
-  const cookie = await cookies();
-  const access = cookie.get("access_token")?.value;
-  const refresh = cookie.get("refresh_token")?.value;
+  const { pathname } = req.nextUrl;
+  const isProtectedRoute = protectedRoutes.includes(pathname);
 
-  if (refresh && !access) {
-    const data = await fetch(new URL("/api/refresh-token", req.nextUrl), {
-      method: "POST",
-      body: JSON.stringify({ refresh_token: refresh })
-    });
+  const access = req.cookies.get("access_token")?.value;
+  const refresh = req.cookies.get("refresh_token")?.value;
 
-    if (!data.ok) {
-      cookie.delete("refresh_token");
-      return NextResponse.redirect(new URL("/login", req.nextUrl));
-    }
-    const datax = await data.json();
-    cookie.set("access_token", datax.access_token, {
-      httpOnly: true,
-      secure: true,
-      maxAge: Number(process.env.NEXT_PUBLIC_ACCESS_TOKEN_EXP) * 60,
-      path: "/"
-    });
-
-    return NextResponse.redirect(new URL(path, req.nextUrl));
-  }
-
-  if (
-    (isProtectedRoute && access && !refresh) ||
-    (isProtectedRoute && !access && !refresh)
-  ) {
-    (await cookies()).delete("access_token");
-    (await cookies()).delete("refresh_token");
-
-    return NextResponse.redirect(new URL("/login", req.nextUrl));
-  }
-
-  if (access && path === "/login") {
+  if (pathname === "/login" && access) {
     return NextResponse.redirect(new URL("/", req.nextUrl));
+  }
+
+  if (isProtectedRoute) {
+    if (access) {
+      const user = await checkUser(access);
+      if (user) {
+        const res = NextResponse.next();
+        if (user.access_token) {
+          res.cookies.set("access_token", user.access_token, {
+            httpOnly: true,
+            secure: true,
+            maxAge: Number(process.env.NEXT_PUBLIC_ACCESS_TOKEN_EXP) * 60,
+            path: "/"
+          });
+        }
+        return res;
+      }
+    }
+
+    if (refresh) {
+      try {
+        const newAccess = await refreshToken(refresh);
+        const res = NextResponse.redirect(new URL(pathname, req.nextUrl));
+        res.cookies.set("access_token", newAccess, {
+          httpOnly: true,
+          secure: true,
+          maxAge: Number(process.env.NEXT_PUBLIC_ACCESS_TOKEN_EXP) * 60,
+          path: "/"
+        });
+        return res;
+      } catch (error) {
+        console.error("Refresh token failed:", error);
+      }
+    }
+
+    const res = NextResponse.redirect(new URL("/login", req.nextUrl));
+    res.cookies.delete("access_token");
+    res.cookies.delete("refresh_token");
+    return res;
   }
 
   return NextResponse.next();

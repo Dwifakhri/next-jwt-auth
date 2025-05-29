@@ -7,7 +7,11 @@ const app = express();
 import http from "http";
 const server = http.createServer(app);
 
-const allowedOrigins = ["http://localhost:3000"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://0.0.0.0:3000",
+  "http://127.0.0.1:3000"
+];
 var corsOptions = {
   origin: allowedOrigins,
   optionsSuccessStatus: 200
@@ -28,14 +32,13 @@ const users = [
 
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
-
   const foundUser = users.find((user) => user.email === email);
   if (!foundUser || password !== foundUser.password) {
     return res.status(400).json({ message: "Invalid credentials" });
   }
 
   const access_token = jwt.sign({ id: foundUser.id }, "shhhhh", {
-    expiresIn: "5m"
+    expiresIn: "2m"
   });
   const refresh_token = jwt.sign({ id: foundUser.id }, "shhhhh", {
     expiresIn: "1h"
@@ -53,7 +56,7 @@ app.post("/api/refresh", (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     } else {
       const access_token = jwt.sign({ id: foundUser.id }, "shhhhh", {
-        expiresIn: "5m"
+        expiresIn: "2m"
       });
       return res.json({ access_token });
     }
@@ -97,6 +100,6 @@ app.get("/api/me", (req, res) => {
   }
 });
 
-server.listen(8000, "localhost", () => {
+server.listen(8000, "0.0.0.0", () => {
   console.log(`Listening on http://localhost:${8000}`);
 });

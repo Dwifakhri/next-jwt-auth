@@ -2,12 +2,10 @@
 "use client";
 import React from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const { setUser } = useAuth();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("admin@mail.com");
   const [password, setPassword] = useState("123123");
@@ -29,8 +27,7 @@ const Login = () => {
       }
       const user = await res.json();
       setUser(user);
-      router.push("/");
-      setLoading(false);
+      window.location.href = "/";
     } catch (error: any) {
       setError(error.message);
       setLoading(false);

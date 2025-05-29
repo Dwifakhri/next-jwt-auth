@@ -4,29 +4,24 @@ import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
 import { getProfile } from "@/lib/dal";
 import Navbar from "@/components/Navbar";
-import Token from "@/components/Token";
 
-const inter = Inter({
-  variable: "--font-geist-sans",
-  subsets: ["latin"]
-});
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Next JWT Auth",
   description: "Example of Next JWT Auth"
 };
 
-export default async function Layout({
+export default async function RootLayout({
   children
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   const user = await getProfile();
 
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
-        <Token user={user} />
         <AuthProvider initialUser={user}>
           <div>
             <Navbar />
